@@ -32,13 +32,13 @@ def input_doc_number():
     doc_num = input('Введите номер документа: ')
     return doc_num
 
-def get_name_person():
+def get_name_person(doc_number):
     """Функция спрашивает номер документа и
     выводит имя человека, которому он принадлежит.
     """
 
     # print('Функция находится в разработке.')
-    doc_number = input_doc_number()
+    # doc_number = input_doc_number()
     for doc in documents:
         if doc['number'] == doc_number:
             print('Владельцем документа под номером "{0}" является {1}.'.format(doc_number, doc['name']))
@@ -54,16 +54,17 @@ def get_all_doc_list():
         print('{0} "{1}" {2}'.format(doc['type'], doc['number'], doc['name']))
 
 
-def get_shelf_number():
-    """Функция спросит номер документа и
-    выведет номер полки, на которой он находится.
+def get_shelf_number(doc_number):
+    """Функция получает номер документа и
+    возвращает номер полки, на которой он находится.
     """
 
     # print('Функция находится в разработке.')  # Удалить
-    doc_number = input_doc_number()
-    for number_shelf, doc_numbers in directories.items():
+    # doc_number = input_doc_number()
+    for shelf_number, doc_numbers in directories.items():
         if doc_number in doc_numbers:
-            print('Документ номер "{0}" хранится на {1} полке.'.format(doc_number, number_shelf))
+            return shelf_number
+            # print('Документ номер "{0}" хранится на {1} полке.'.format(doc_number, shelf_number))
 
 def add_new_doc():
     """Функция добавит новый документ в каталог и в
@@ -83,20 +84,33 @@ def add_new_doc():
 
 # В функции del_doc и move_doc вынести в отдельную функцию получение индекса документа в списке documents для последующего удаления.
 # Так же вынести в отд. функ. получение номера полки для последующего удаления документа с этой полки.
+def get_index(number, data_array, key_dict=0):
+    """Функция вернет индекс элемента итеррируемого
+
+    объекта data_array, если этот элемент, который
+    представляет из себя словарь, содержит в себе
+    ключ key_dict со сначением number.
+    """
+    if key_dict != 0:
+        for i, doc in enumerate(data_array):
+            if doc[key_dict] == number:
+                return i
+    elif key_dict == 0:
+        for i, doc_numb in enumerate(data_array):
+            if doc_numb == number:
+                return i
+
+
+#  Для фукнции del_doc исправить код, чтобы для определения номера полки хранения документа использовалась уже
+#  написанная фукнция get_shelf_number(doc_number), в которую надо только передать номер документа.
 def del_doc():
     """Функция спросит номер документа и
     удалит его из каталога и из перечня полок.
     """
 
-    print('Функция находится в разработке.')
     global documents
     doc_number = input_doc_number()
-    # Удалим документ из общего списка
-    ind = 0
-    for i, doc in enumerate(documents):
-        if doc['number'] == doc_number:
-            ind = i
-            break
+    ind = get_index(doc_number, documents, 'number')
     documents.pop(ind)  # Удалили документ из общего списка
     print('Обновленный список документов:', documents)
 
@@ -105,12 +119,9 @@ def del_doc():
         if doc_number in doc_numbers:
             break
     print('Полка {0}, документы на полке {1}'.format(number_shelf, doc_numbers))
-    for i, doc_numb in enumerate(directories[number_shelf]):
-        if doc_numb == doc_number:
-            print('Мы нашли нужный документ под номером: {0}'.format(i))
-            break
-    del directories[number_shelf][i]
-    print('Теперь directories выглядит так: ', directories)
+    ind_2 = get_index(doc_number, directories[number_shelf])
+    del directories[number_shelf][ind_2]
+    print('directories после удаления: ', directories)
 
 
 
@@ -119,13 +130,25 @@ def del_doc():
 
 # del_doc()
 
+def input_shelf_number():
+    sh_number = input('Введите номер полки: ')
+    return sh_number
+
 def move_doc():
     """Функция спросит номер документа и
     целевую полку и переместит его с текущей
     полки на целевую.
     """
+# 1. нужна функция, которая узнает на какой полке находится документ
+# 2. Если полко, на которой находится документ не совпадает с полкой которую указал пользователь, то программа удалит документ с прежней полки
+# 3  Добавит документ в указанную пользователем полку
 
     print('Функция находится в разработке.')
+    doc_number = input_doc_number()  # Получили номер документа
+    shelf_number = input_shelf_number()
+
+
+
 
 def add_new_shelf():
     """Функция спросит номер новой полки и
@@ -133,7 +156,7 @@ def add_new_shelf():
     """
 
     global directories
-    shelf_number = input('Введите номер новой полки: ')
+    shelf_number = get_shelf_number()
     if shelf_number not in directories:
         directories[shelf_number] = []
         print('Добавлена новая полка. Актуальный список полок: {}'.format(directories))
@@ -151,6 +174,7 @@ def input_choice():
         s - узнать номер полки хранения;
         a - добавить новый документ;
         d - удалить документ;
+        m - переместить документ на другую полку;
         as - добавить новую полку хранения;
         q - выход из программы:""")
     return input('Введите желаемое действие: ').lower()
@@ -161,11 +185,13 @@ def run():
         your_input = input_choice()
         print('Вы выбрали: {0}'.format(your_input))  #  Отладочный принт, удалить
         if your_input == 'p':
-            get_name_person()  #  Поиск имени по номеру документа
+            doc_number = input_doc_number()
+            get_name_person(doc_number)  #  Поиск имени по номеру документа
         elif your_input == 'l':
             get_all_doc_list()  # Показать список всех документов
         elif your_input == 's':
-            get_shelf_number()  # Узнать номер полки хранения по номеру документа
+            doc_number = input_doc_number()
+            print('Документ хранится на полке {0}'.format(get_shelf_number(doc_number)))  # Узнать номер полки хранения по номеру документа
         elif your_input == 'a':
             add_new_doc()  # Добавление нового документа в каталог и перечень полок
         elif your_input == 'd':
@@ -179,4 +205,4 @@ def run():
             break
 
           
-# run()
+run()
